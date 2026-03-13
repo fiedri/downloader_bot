@@ -27,6 +27,7 @@ Puedo descargar contenido de muchas redes sociales:
 ☁️ SoundCloud... ¡y más!
 
 <b>¡Simplemente envíame el enlace!</b>\
+<i>Desarrollado por @fiedri</i>
 """)
 
 @bot.message_handler(commands=['help'])
@@ -44,7 +45,7 @@ def send_help(message):
 - x
                  
 <b>Limitantes</b>
-- Videos muy largos que superen los 50 mb
+- Contenido que supere los 50 mb
 """)
 
 @bot.message_handler(content_types=['text'])
