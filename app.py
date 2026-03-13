@@ -1,8 +1,10 @@
 import telebot
 import os
-from src.music import descargar_musica
+from telebot import types
+from src.downloader import descargar_contenido
 from src.logger import registrar_descarga
 from dotenv import load_dotenv
+import uuid
 
 load_dotenv()
 
@@ -10,15 +12,21 @@ bot = telebot.TeleBot(os.getenv("BOT_TOKEN"), parse_mode="HTML")
 telebot.apihelper.CONNECT_TIMEOUT = 60
 telebot.apihelper.READ_TIMEOUT = 60
 
+# Diccionario para almacenar URLs temporalmente con claves únicas
+pending_downloads = {}
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(message, """\
-👋 <b>¡Hola! Soy YtdownMusic</b>
+👋 <b>¡Hola! Soy tu Asistente de Descarga</b> 🚀
 
-Soy tu asistente personal para descargar música de YouTube. 🎧
-Simplemente envíame el enlace de cualquier video o canción de YouTube y yo me encargaré de extraer el audio en la mejor calidad.
+Puedo descargar contenido de muchas redes sociales:
+📺 YouTube
+🤳 TikTok / Instagram
+🐦 Twitter (X)
+☁️ SoundCloud... ¡y más!
 
-Escribe /help para más información.\
+<b>¡Simplemente envíame el enlace!</b>\
 """)
 
 @bot.message_handler(commands=['help'])
@@ -26,53 +34,86 @@ def send_help(message):
     bot.reply_to(message, """\
 📖 <b>¿Cómo usar el bot?</b>
 
-1. Ve a YouTube y copia el enlace del video o canción que deseas.
-2. Pega el enlace aquí en el chat y envíamelo.
-3. Espera unos momentos mientras proceso y descargo el audio.
-4. ¡Disfruta tu música directamente en Telegram! 🎶
+1. Pega el enlace aquí en el chat y envíamelo.
+2. Espera unos momentos mientras proceso la descarga.
+
+<b>Fuentes comprobadas</b>
+- youtube
+- Tiktok (sin marca de agua)
+- Instagram (sin marca de agua)
+- x
+                 
+<b>Limitantes</b>
+- Videos muy largos que superen los 50 mb
 """)
 
 @bot.message_handler(content_types=['text'])
-def download(message):
+def ask_format(message):
+    # Detectar si el texto contiene un enlace (simplificado)
+    if "http://" in message.text or "https://" in message.text:
+        # Generar una clave única para la URL
+        key = str(uuid.uuid4())
+        pending_downloads[key] = message.text
+        
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        btn_audio = types.InlineKeyboardButton("🎵 Audio (MP3)", callback_data=f"audio,{key}")
+        btn_video = types.InlineKeyboardButton("🎬 Video (MP4)", callback_data=f"video,{key}")
+        markup.add(btn_audio, btn_video)
+        
+        bot.reply_to(message, "🎶 <b>¿Qué formato deseas descargar?</b>", reply_markup=markup)
+    else:
+        bot.reply_to(message, "⚠️ Por favor, envíame un enlace válido.")
+
+@bot.callback_query_handler(func=lambda call: True)
+def process_download(call):
+    data = call.data.split(',')
+    chat_id = call.message.chat.id
+    msg_id = call.message.message_id
+    if len(data) != 2:
+        bot.answer_callback_query(call.id, "Datos inválidos.")
+        return
+    
+    tipo, key = data
+    url = pending_downloads.pop(key, None)
+    if not url:
+        bot.answer_callback_query(call.id, "Enlace expirado o inválido.")
+        return
+    
+    bot.edit_message_text(f"⏳ <b>Procesando tu {tipo}...</b>", chat_id, msg_id)
     try:
-        urlyt = ("https://youtu.be", "https://www.youtube.com", "https://youtube.com", "https://music.youtube.com")
-        if message.text.strip().startswith(urlyt):
-            msg = bot.reply_to(message, "🔍 <i>Buscando y procesando enlace...</i>")
-            
-            try:
-                bot.edit_message_text("⬇️ <i>Descargando audio en alta calidad...</i>", chat_id=message.chat.id, message_id=msg.message_id)
-                audio_info = descargar_musica(message.text)
-              
-                bot.edit_message_text("⬆️ <i>Subiendo canción a Telegram...</i>", chat_id=message.chat.id, message_id=msg.message_id)
-                
-                with open(audio_info['path'], 'rb') as cancion:
-                    bot.send_chat_action(message.chat.id, 'upload_audio')
-                    bot.send_audio(
-                        chat_id=message.chat.id, 
-                        audio=cancion,
-                        title=audio_info['title'],
-                        performer=audio_info['artist'],
-                        duration=audio_info['duration']
-                    )
-                
-                registrar_descarga(
-                    message.from_user.id, 
-                    message.from_user.username or message.from_user.first_name, 
-                    audio_info['title'], 
-                    message.text
-                )
-
-                bot.delete_message(message.chat.id, msg.message_id)
-                if os.path.exists(audio_info['path']):
-                    os.remove(audio_info['path'])
-                
-            except Exception as e:
-                bot.edit_message_text(f"❌ <b>Error al procesar la descarga:</b>\n<code>{str(e)}</code>", chat_id=message.chat.id, message_id=msg.message_id)
-        else:
-            bot.reply_to(message, "⚠️ <b>Enlace no válido.</b>\nPor favor, envíame un enlace correcto de YouTube.")
+        info = descargar_contenido(url, tipo)
     except Exception as e:
-        bot.reply_to(message, f"❌ <b>Ocurrió un error inesperado:</b>\n<code>{str(e)}</code>")
+        bot.edit_message_text(f"❌ <b>Error al descargar:</b> {str(e)}", chat_id, msg_id)
+        return
+    
+    if not os.path.exists(info['path']):
+        bot.edit_message_text("❌ <b>Error: Archivo no encontrado después de la descarga.</b>", chat_id, msg_id)
+        return
+    
+    bot.edit_message_text(f"⬆️ <b>Subiendo {tipo} a Telegram...</b>", chat_id, msg_id)
+    registrar_descarga(chat_id, call.message.from_user.username or call.message.from_user.first_name, info['title'], url)
+    with open(info['path'], 'rb') as file:
+        bot.send_chat_action(chat_id, 'upload_video' if tipo == 'video' else 'upload_audio')
+            
+        if tipo == 'audio':
+            bot.send_audio(
+                chat_id, 
+                file, 
+                title=info['title'], 
+                performer=info['artist'], 
+                duration=info['duration']
+                )
+        else:
+            print("enviando ")
+            bot.send_video(
+                chat_id, 
+                file, 
+                caption=f"🎥 <b>{info['title']}</b>"
+            )
 
+        bot.delete_message(chat_id, msg_id)
+        if os.path.exists(info['path']):
+            os.remove(info['path'])
 if __name__ == '__main__':
     print("Iniciando bot...")
     bot.infinity_polling()
