@@ -1,4 +1,4 @@
-# Bot de Telegram - YtdownMusic
+# Bot de Telegram
 
 Este es un bot de Telegram que permite descargar música de YouTube en formato MP3. Simplemente envía el enlace de un video de YouTube y el bot descargará la canción y te la enviará.
 
