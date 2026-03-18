@@ -5,7 +5,7 @@ El bot permite la descarga de audio y video de las plataformas más influyentes 
  * Formatos Flexibles: Selección inteligente entre MP3 (Audio) y MP4 (Video).
  * Optimización de Carga: Sistema de control de peso automático limitado a 50MB para garantizar la compatibilidad con los servidores de Telegram.
  * Limpieza de Servidor: Gestión de archivos temporales integrada para mantener el almacenamiento optimizado.
-## Instalación y Despliegue
+## Instalación
  * Entorno: Asegúrate de tener Python 3.10+ y FFmpeg instalado en el sistema (el motor de procesamiento).
  * Dependencias:
    `pip install -r requirements.txt`
