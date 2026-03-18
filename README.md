@@ -1,65 +1,21 @@
-# Bot de Telegram
-
-Este es un bot de Telegram que permite descargar música de YouTube en formato MP3. Simplemente envía el enlace de un video de YouTube y el bot descargará la canción y te la enviará.
-
-## Instalación
-
-1. Clona este repositorio o descarga los archivos.
-2. Asegúrate de tener Python instalado en tu sistema.
-3. Instala las dependencias necesarias ejecutando el siguiente comando en la terminal:
-
-   ```bash
+# 🤖 NeoDownloader bot
+El bot permite la descarga de audio y video de las plataformas más influyentes del mercado actual, optimizando la entrega para cumplir con las restricciones de la API de Telegram.
+🔥 Capacidades Actualizadas
+ * Multi-Plataforma: Soporte completo para YouTube, X (Twitter), Instagram y TikTok (sin marcas de agua).
+ * Formatos Flexibles: Selección inteligente entre MP3 (Audio) y MP4 (Video).
+ * Optimización de Carga: Sistema de control de peso automático limitado a 50MB para garantizar la compatibilidad con los servidores de Telegram.
+ * Limpieza de Servidor: Gestión de archivos temporales integrada para mantener el almacenamiento optimizado.
+## 🛠️ Instalación y Despliegue
+ * Entorno: Asegúrate de tener Python 3.10+ y FFmpeg instalado en el sistema (el motor de procesamiento).
+ * Dependencias:
    pip install -r requirements.txt
 
-4. Configura el archivo .env con tu token de bot de Telegram. Ejemplo:
-TOKENBOT=YOUR_TELEGRAM_TOKEN
+ * Configuración: Crea un archivo .env en la raíz del proyecto:
+   TOKENBOT=TU_TELEGRAM_TOKEN_AQUI
 
-5. Ejecuta el bot con el siguiente comando:
+ * Ejecución:
+   python app.py
 
-## Uso
-Envía un enlace de YouTube al bot. Por ejemplo:
-
-1. Envía el siguiente enlace al bot:
-   ```
-   https://www.youtube.com/watch?v=dQw4w9WgXcQ
-   ```
-
-2. El bot procesará el enlace y te responderá con un archivo MP3 descargado
-
-
-
-1. Nivel Principiante: El Logger (logger.py)
-  Concepto: Manejo de archivos y fechas.
-   * Qué aprenderás: Cómo abrir archivos en modo "añadir" (a), cómo
-     formatear fechas con datetime y cómo usar f-strings para crear
-     mensajes limpios.
-   * Reto para ti: Intenta añadir al comentario: ¿Qué pasaría si el
-     archivo no existe? (Pista: Python lo crea solo si usas el modo
-     a).
-
-
-  2. Nivel Intermedio: El Motor de Descarga (downloader.py)
-  Concepto: Diccionarios de configuración y librerías externas.
-   * Qué aprenderás:
-       * Diccionarios: Casi todas las opciones de yt-dlp se pasan
-         como un diccionario ({ 'key': 'value' }).
-       * Lógica de decisión: Cómo usar un if/else para cambiar el
-         comportamiento del programa dependiendo de si el usuario
-         quiere audio o video.
-       * FFmpeg: Entenderás que este script es solo un "puente" que
-         le da órdenes a un programa de terminal llamado FFmpeg.
-   * Idea para aprender: Busca en Google qué significa cada opción
-  3. Nivel Avanzado: El Cerebro del Bot (app.py)
-  Concepto: Programación orientada a eventos y decoradores.
-   * Qué aprenderás:
-       * Decoradores (@bot.message_handler): Es una forma de
-         decirle a Python: "Cuando pase X cosa en Telegram, ejecuta
-         esta función".
-       * Botones Inline: Cómo crear interfaces interactivas que no
-         dependen solo de texto.
-       * Callbacks: Es la parte más difícil. Cuando pulsas un
-         botón, Telegram no envía un "mensaje", envía un
-         "callback". Tienes que aprender a separar los datos (el
-         callback_data).
-       * Gestión de archivos temporales: Por qué es vital usar
-         os.remove() para no llenar el servidor de basura.
+## 🚀 Uso
+Simplemente envía un enlace de cualquier red social soportada. El bot desplegará un menú interactivo para que elijas el formato.
+Ejemplo de flujo: Link de TikTok -> Elección: Video sin marca de agua -> Procesamiento -> Envío de MP4 (<50MB).
