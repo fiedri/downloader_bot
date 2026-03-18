@@ -12,7 +12,7 @@ bot = telebot.TeleBot(os.getenv("BOT_TOKEN"), parse_mode="HTML")
 telebot.apihelper.CONNECT_TIMEOUT = 60
 telebot.apihelper.READ_TIMEOUT = 60
 
-# Diccionario para almacenar URLs temporalmente con claves únicas
+# Diccionario para almacenar URLs temporalmente
 pending_downloads = {}
 
 @bot.message_handler(commands=['start'])
@@ -45,12 +45,12 @@ def send_help(message):
 - x
                  
 <b>Limitantes</b>
-- Contenido que supere los 50 mb
+- Contenido que supere los 50 mb de descarga
 """)
 
 @bot.message_handler(content_types=['text'])
 def ask_format(message):
-    # Detectar si el texto contiene un enlace (simplificado)
+    
     if "http://" in message.text or "https://" in message.text:
         # Generar una clave única para la URL
         key = str(uuid.uuid4())

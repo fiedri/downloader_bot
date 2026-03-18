@@ -2,3 +2,5 @@ env/
 bot_v2/
 .env
 Descargas/
+src/cookies.txt
+*/__pycache__

@@ -5,9 +5,9 @@ def descargar_contenido(url, tipo='audio', carpeta="Descargas"):
     """
     Descarga contenido con límites estrictos y limpieza automática de errores.
     """
-    archivo_temporal = None # Para rastrear y borrar archivos parciales
-    info = None # Para tener acceso a la info del video en el bloque except
-    razon_filtrado = None # Para detectar si el match_filter saltó
+    archivo_temporal = None
+    info = None
+    razon_filtrado = None
     
     try:
         url = url.strip()
@@ -15,20 +15,19 @@ def descargar_contenido(url, tipo='audio', carpeta="Descargas"):
         
         LIMITE_MB = 50
         LIMITE_BYTES = LIMITE_MB * 1024 * 1024
-        
-        # 1. Filtro inteligente: Diferencia entre audio y video
+
         def filtro_inteligente(info_dict, *, incomplete):
             nonlocal razon_filtrado
             duracion = info_dict.get('duration')
             
             if tipo == 'audio':
-                # Estimamos el MP3 final a 190kbps (~23.7 KB/s)
+                
                 if duracion and (23750 * duracion) > LIMITE_BYTES:
                     razon_filtrado = "LIMITE_ERROR"
                     return f"Audio demasiado largo (~{duracion/60:.1f}MB)"
                 return None
             
-            # Para video, verificamos el peso del archivo original/estimado
+            
             peso = info_dict.get('filesize') or info_dict.get('filesize_approx')
             if peso and peso > LIMITE_BYTES:
                 razon_filtrado = "LIMITE_ERROR"
@@ -36,7 +35,7 @@ def descargar_contenido(url, tipo='audio', carpeta="Descargas"):
             
             return None
 
-        # 2. Hook de seguridad durante la descarga
+
         def hook_seguridad(d):
             nonlocal archivo_temporal
             archivo_temporal = d.get('filename')
@@ -70,25 +69,25 @@ def descargar_contenido(url, tipo='audio', carpeta="Descargas"):
             })
         
         with yt_dlp.YoutubeDL(opciones) as ydl:
-            # PASO 1: Obtener info (aplica match_filter)
+            
             info = ydl.extract_info(url, download=False)
             if not info or razon_filtrado == "LIMITE_ERROR":
                 raise Exception("LIMITE_ERROR")
             
-            # PASO 2: Ajustar formato si es video
+            
             if tipo == 'video':
                 dur = info.get('duration', 0)
                 ydl.params['format'] = 'bestvideo[height<=720]+bestaudio/best' if dur <= 60 else 'bestvideo[height<=480]+bestaudio/best'
             
-            # PASO 3: Descarga real
+            
             print(f"Iniciando descarga ({tipo})...")
             info_final = ydl.process_ie_result(info, download=True)
             
-            # SI NO SE DESCARGÓ NADA (Filtrado durante el proceso)
+            
             if not info_final or 'requested_downloads' not in info_final:
                 raise Exception("LIMITE_ERROR")
             
-            # PASO 4: Localización del archivo
+            
             archivo_final = info_final['requested_downloads'][0]['filepath']
             if tipo == 'audio' and not archivo_final.lower().endswith('.mp3'):
                 archivo_final = os.path.splitext(archivo_final)[0] + ".mp3"
